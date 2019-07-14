@@ -8,18 +8,14 @@ import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
 import com.google.zxing.qrcode.QRCodeWriter
 import org.openqa.selenium.By
-import org.openqa.selenium.NoSuchElementException
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.GeckoDriverService
-import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.lang.RuntimeException
 import java.util.*
 import javax.imageio.ImageIO
 
-data class Chat(val name: String)
+data class Chat(val name: String, val cssClass: String)
 
 class ChatApi {
     private val driver = GeckoDriverService.Builder()
@@ -53,17 +49,44 @@ class ChatApi {
     }
 
     fun waitForAuth() {
-        val wait = WebDriverWait(driver, 15)
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("pane-side")))
+        driver.waitForElement(By.id("pane-side"))
     }
+
+    // todo: handle other web session opening
+    // possibly wait 10 minutes then reopen session
 
     fun getChats(): Set<Chat> {
         return driver.findElement(By.id("pane-side"))
             .findElements(By.xpath("./div/div/div/div"))
-            .map { chat ->
-                val name = chat.findElement(By.xpath("./div[1]/div[1]/div[2]/div/div/span")).text
-                Chat(name)
+            .map { chatElement ->
+                val name = chatElement.findElement(By.xpath("./div[1]/div[1]/div[2]/div/div/span")).text
+                val cssClass = chatElement.getAttribute("class")
+                // todo: find unique html identifier
+                Chat(name, "")
             }
             .toSet()
+    }
+
+    fun hasNewAudioMessage(chat: Chat): Boolean {
+        val chatElement = driver.findElementByClassName(chat.cssClass)
+        // todo: parse new messages icon and last message type icon
+        return false
+    }
+
+    fun getAudioMessage(chat: Chat): ByteArray {
+        val chatElement = driver.findElementByClassName(chat.cssClass)
+        chatElement.click()
+
+        return "audio".toByteArray()
+    }
+
+    fun sendMessage(chat: Chat, text: String) {
+        val chatElement = driver.findElementByClassName(chat.cssClass)
+        chatElement.click()
+        // todo: find text input and send keys
+    }
+
+    fun close() {
+        driver.close()
     }
 }

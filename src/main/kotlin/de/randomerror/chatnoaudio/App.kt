@@ -1,31 +1,34 @@
 package de.randomerror.chatnoaudio
 
-import com.google.zxing.common.BitMatrix
-
 fun main() {
+    val api = ChatApi()
+
     try {
-        val api = ChatApi()
-        printQrCode(api.getAuthQr())
-        api.waitForAuth()
-        val chats = api.getChats()
-        printChats(chats)
+        authenticate(api)
+
+        while (true) {
+            println("::chats::")
+            api.getChats()
+                .onEach { println("chat: $it") }
+                .filter { chat -> api.hasNewAudioMessage(chat) }
+                .map { chat -> chat to api.getAudioMessage(chat) }
+                .map { (chat, audio) -> chat to /* todo: map audio to text using aws */ String(audio) }
+                .forEach { (chat, text) -> api.sendMessage(chat, text) }
+            Thread.sleep(10 * 1000)
+            break
+        }
     } finally {
-//        driver.quit()
+//        api.close()
     }
 }
 
-fun printQrCode(bitMatrix: BitMatrix) {
-    for (y in 0 until bitMatrix.height) {
-        for (x in 0 until bitMatrix.width) {
-            print(if (bitMatrix[x, y]) "  " else "██")
+fun authenticate(api: ChatApi) {
+    val qrCode = api.getAuthQr()
+    for (y in 0 until qrCode.height) {
+        for (x in 0 until qrCode.width) {
+            print(if (qrCode[x, y]) "  " else "██")
         }
         println()
     }
-}
-
-fun printChats(chats: Collection<Chat>) {
-    println("chats")
-    for (chat in chats) {
-        println("chat: $chat")
-    }
+    api.waitForAuth()
 }
