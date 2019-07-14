@@ -1,5 +1,7 @@
 package de.randomerror.chatnoaudio
 
+import com.google.zxing.common.BitMatrix
+
 fun main() {
     val api = ChatApi()
 
@@ -23,12 +25,25 @@ fun main() {
 }
 
 fun authenticate(api: ChatApi) {
-    val qrCode = api.getAuthQr()
-    for (y in 0 until qrCode.height) {
+    printQrCode(api.getAuthQr())
+    api.waitForAuth()
+}
+
+fun printQrCode(qrCode: BitMatrix) {
+    println()
+    println()
+    for (y in 0 until qrCode.height step 2) {
         for (x in 0 until qrCode.width) {
-            print(if (qrCode[x, y]) "  " else "██")
+            print(
+                when {
+                    !qrCode[x, y] && (y + 1 >= qrCode.height || !qrCode[x, y + 1]) -> "█"
+                    !qrCode[x, y] && qrCode[x, y + 1] -> "▀"
+                    qrCode[x, y] && (y + 1 >= qrCode.height || !qrCode[x, y + 1]) -> "▄"
+                    else -> " "
+                }
+            )
         }
         println()
     }
-    api.waitForAuth()
+    println()
 }
