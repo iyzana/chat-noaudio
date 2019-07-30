@@ -9,7 +9,6 @@ import com.google.zxing.qrcode.QRCodeReader
 import com.google.zxing.qrcode.QRCodeWriter
 import org.openqa.selenium.By
 import org.openqa.selenium.NoSuchElementException
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.GeckoDriverService
@@ -27,7 +26,7 @@ enum class MessageType {
 }
 
 class ChatApi {
-    private val driver: WebDriver = GeckoDriverService.Builder()
+    private val driver = GeckoDriverService.Builder()
         .usingDriverExecutable(File(System.getenv("HOME") + "/Downloads/geckodriver"))
         .build()
         .let(::FirefoxDriver)
@@ -86,12 +85,23 @@ class ChatApi {
 
         val audioSource = driver.findElement(By.id("main"))
             .waitForElement(By.xpath("./div[3]/div[1]/div[1]/div[3]/div[last()]"), driver)
-            .waitForElement(By.xpath("./div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/audio"), driver)
+            .waitForElement(By.xpath("./div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/audio"), driver)
             .getAttribute("src")
 
-        driver.get(audioSource)
+        val base64Audio = driver.executeAsyncScript("""
+            const callback = arguments[arguments.length - 1];
+            fetch("$audioSource")
+              .then(body => body.arrayBuffer())
+              .then(arrayBuffer => {
+                const bytes = new Uint8Array(arrayBuffer);
+                const data = Array.from(bytes);
+                const binary = data.map(i => String.fromCharCode(i)).join('');
+                return window.btoa(binary);
+              })
+              .then(data => callback(data))
+        """.trimIndent()) as String
 
-        return "audio".toByteArray()
+        return Base64.getDecoder().decode(base64Audio)
     }
 
     fun sendMessage(chat: Chat, text: String) {

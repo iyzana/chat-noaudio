@@ -1,6 +1,9 @@
 package de.randomerror.chatnoaudio
 
 import com.google.zxing.common.BitMatrix
+import java.io.ByteArrayInputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
 fun main() {
     val api = ChatApi()
@@ -14,6 +17,7 @@ fun main() {
                 .onEach { println("chat: $it") }
                 .filter { chat -> api.hasNewAudioMessage(chat) }
                 .map { chat -> chat to api.getAudioMessage(chat) }
+                .onEach { (_, audio) -> Files.copy(ByteArrayInputStream(audio), Paths.get("audio-message.ogg")) }
                 .map { (chat, audio) -> chat to /* todo: map audio to text using aws */ String(audio) }
                 .forEach { (chat, text) -> api.sendMessage(chat, text) }
             Thread.sleep(10 * 1000)
