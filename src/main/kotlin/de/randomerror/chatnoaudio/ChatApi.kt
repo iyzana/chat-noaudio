@@ -107,6 +107,7 @@ class ChatApi {
     fun sendMessage(chat: Chat, text: String) {
         val chatElement = getChat(chat)
         chatElement.click()
+        chatElement.sendKeys(text)
         // todo: find text input and send keys
     }
 
