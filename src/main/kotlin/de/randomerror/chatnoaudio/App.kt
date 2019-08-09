@@ -12,6 +12,7 @@ fun main() {
             println("::chats::")
             api.getChats()
                 .onEach { println("chat: $it") }
+                .filter { chat -> chat.hasUnread }
                 .filter { chat -> api.hasNewAudioMessage(chat) }
                 .map { chat -> chat to api.getAudioMessage(chat) }
                 .map { (chat, audio) -> chat to transcribe(audio) }

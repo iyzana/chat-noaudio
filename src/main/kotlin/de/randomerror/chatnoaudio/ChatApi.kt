@@ -134,7 +134,6 @@ class ChatApi {
     private fun hasUnreadMessages(chatElement: WebElement): Boolean {
         val unreadMessages =
             chatElement.findElements(By.xpath("./div[1]/div[1]/div[2]/div[2]/div[2]/span[1]/div/span"))
-                .mapNotNull { it.text.toIntOrNull() }
                 .firstOrNull()
         return unreadMessages != null
     }
