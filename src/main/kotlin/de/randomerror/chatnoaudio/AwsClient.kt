@@ -19,7 +19,7 @@ val bucket = "chat-noaudio"
 val key = "audio.mp3"
 
 fun transcribe(audio: ByteArray): String {
-    if (audio.size > 50000) {
+    if (audio.size > 200000) {
         return "too long audio ignored"
     }
 
