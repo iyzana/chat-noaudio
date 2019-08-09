@@ -17,6 +17,7 @@ fun main() {
                 .map { chat -> chat to api.getAudioMessage(chat) }
                 .map { (chat, audio) -> chat to transcribe(audio) }
                 .map { (chat, text) -> chat to "\"$text\"\n - transcribed by chat-noaudio" }
+                .onEach { (chat, text) -> println("sending message $text") }
                 .forEach { (chat, text) -> api.sendMessage(chat, text) }
             Thread.sleep(10 * 1000)
             break
