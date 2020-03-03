@@ -39,9 +39,12 @@ class ChatApi {
         val url = Base64.getDecoder().decode("aHR0cHM6Ly93ZWIud2hhdHNhcHAuY29tLwo=")
         driver.navigate().to(String(url))
 
-        val base64qr = driver.waitForElement(By.className("landing-main"))
-            .waitForElement(By.tagName("img"), driver)
-            .getAttribute("src")
+        Thread.sleep(2000)
+        val base64Auth = driver.executeAsyncScript("""
+            const callback = arguments[arguments.length - 1];
+            callback(document.getElementsByClassName("landing-main")[0].getElementsByTagName("canvas")[0].toDataURL("image/png"));
+        """.trimIndent()) as String
+        val base64qr = base64Auth
             .split(';')[1]
             .split(',')[1]
         val image = base64qr
@@ -64,10 +67,11 @@ class ChatApi {
     // possibly wait 10 minutes then reopen session
 
     fun getChats(): Set<Chat> {
+        Thread.sleep(2000)
         return driver.findElement(By.id("pane-side"))
-            .findElements(By.xpath("./div/div/div/div"))
+            .findElements(By.xpath("./div[1]/div[1]/div[1]/div"))
             .mapIndexed { index, chatElement ->
-                val name = chatElement.findElement(By.xpath("./div[1]/div[1]/div[2]/div[1]/div[1]/span")).text
+                val name = chatElement.findElement(By.xpath("./div[1]/div[1]/div[2]/div[1]/div[1]//span")).text
                 val hasUnread = hasUnreadMessages(chatElement)
                 val messageType = getMessageType(chatElement)
                 Chat(name, index + 1, hasUnread, messageType)
@@ -81,11 +85,11 @@ class ChatApi {
 
     fun getAudioMessage(chat: Chat): ByteArray {
         getChat(chat).click()
-        Thread.sleep(100)
+        Thread.sleep(1000)
 
         val audioSource = driver.findElement(By.id("main"))
-            .waitForElement(By.xpath("./div[3]/div[1]/div[1]/div[3]/div[last()]"), driver)
-            .waitForElement(By.xpath("./div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/audio"), driver)
+            .waitForElement(By.xpath("./div[3]/div[1]/div[1]/div[2]/div[last()]"), driver)
+            .waitForElement(By.xpath("./div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/audio"), driver)
             .getAttribute("src")
 
         val base64Audio = driver.executeAsyncScript("""
